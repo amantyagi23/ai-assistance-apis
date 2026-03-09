@@ -13,14 +13,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginResponse struct {
-	User         *userRepo.User `json:"user"`
-	AccessToken  string         `json:"access_token"`
-	RefreshToken string         `json:"refresh_token"`
-	ExpiresIn    int64          `json:"expires_in"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type LoginController struct {
@@ -37,19 +34,19 @@ func NewLoginController() *LoginController {
 }
 
 // CreateUser handles user creation
-func (uc *LoginController) Execute(c *fiber.Ctx) error {
+func (this *LoginController) Execute(c *fiber.Ctx) error {
 	var req userDTO.LoginUserDTO
 
 	// Validate request
-	if valid, errors := uc.ValidateRequest(c, &req); !valid {
-		return uc.ValidationError(c, errors)
+	if valid, errors := this.ValidateRequest(c, &req); !valid {
+		return this.ValidationError(c, errors)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Check if user already exists
-	user, err := uc.userRepo.FindByEmail(ctx, req.Email)
+	user, err := this.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
 
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -57,17 +54,17 @@ func (uc *LoginController) Execute(c *fiber.Ctx) error {
 		})
 	}
 	if user == nil {
-		return uc.NotFound(c, "User with this email not exists")
+		return this.NotFound(c, "User with this email not exists")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+	if err := utils.ComparePwd(user.Password, req.Password); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
 		})
 	}
 
 	// Generate tokens
-	accessToken, refreshToken, err := uc.generateTokens(user.UserID.Hex())
+	accessToken, refreshToken, err := this.generateTokens(user.UserID.Hex())
 	fmt.Printf(accessToken, refreshToken)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -89,7 +86,7 @@ func (uc *LoginController) Execute(c *fiber.Ctx) error {
 		},
 	}
 
-	if err := uc.userSessionRepo.CreateSession(ctx, session); err != nil {
+	if err := this.userSessionRepo.CreateSession(ctx, session); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create session",
 		})
@@ -100,13 +97,11 @@ func (uc *LoginController) Execute(c *fiber.Ctx) error {
 	utils.SetCookieHandler(c, "refresh_token", refreshToken, expiration)
 
 	// Update last login
-	_ = uc.userRepo.UpdateLastLogin(ctx, user.UserID.Hex())
+	_ = this.userRepo.UpdateLastLogin(ctx, user.UserID.Hex())
 
 	return c.JSON(LoginResponse{
-		User:         user,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    24 * 60 * 60, // 24 hours in seconds
 	})
 }
 
