@@ -11,7 +11,6 @@ import (
 	"github.com/amantyagi23/ai-assistance/internal/shared/infra/http/routes"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -58,10 +57,10 @@ func main() {
 	app.Use(recover.New())
 	app.Use(helmet.New())
 
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: cfg.FrontendURL,
-		AllowMethods: "GET,POST,PUT,DELETE,PATCH",
-	}))
+	// app.Use(cors.New(cors.Config{
+	// 	AllowOrigins: cfg.FrontendURL,
+	// 	AllowMethods: "GET,POST,PUT,DELETE,PATCH",
+	// }))
 
 	app.Use(limiter.New(limiter.Config{
 		Max:        100,
