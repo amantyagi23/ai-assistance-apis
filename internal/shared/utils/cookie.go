@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetCookieHandler(c *fiber.Ctx, tokenName string, token string, expiration time.Time) {
+func SetCookieHandler(c *fiber.Ctx, tokenName string, token string, expiration time.Time) error {
 
 	cookie := new(fiber.Cookie)
 	cookie.Name = tokenName
@@ -18,6 +18,5 @@ func SetCookieHandler(c *fiber.Ctx, tokenName string, token string, expiration t
 	cookie.SameSite = "Lax"
 
 	c.Cookie(cookie)
-
-	return
+	return nil
 }
