@@ -49,7 +49,7 @@ func OllamaService(req GenerateRequest) (GenerateResponse, error) {
 		Timeout: 60 * time.Second,
 	}
 
-	var url string = config.APPConfig().OllamaHostPath + "/api/generate"
+	var url string = config.Load().OllamaHostPath + "/api/generate"
 	// Send POST request to Ollama
 	resp, err := client.Post(
 		url,
