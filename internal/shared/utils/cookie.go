@@ -14,7 +14,7 @@ func SetCookieHandler(c *fiber.Ctx, tokenName string, token string, expiration t
 	cookie.Expires = expiration
 	cookie.Path = "/"
 	cookie.HTTPOnly = true
-	cookie.Secure = true
+	cookie.Secure = false
 	cookie.SameSite = "Lax"
 
 	c.Cookie(cookie)
